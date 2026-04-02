@@ -199,7 +199,7 @@ function ptMountNote(note, canvas) {
         <option value="8px">8</option>
         <option value="10px">10</option>
         <option value="12px">12</option>
-        <option value="13px">13</option>
+        <option value="13px" selected>13</option>
         <option value="14px">14</option>
         <option value="16px">16</option>
         <option value="18px">18</option>

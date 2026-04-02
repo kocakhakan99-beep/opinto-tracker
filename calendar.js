@@ -96,7 +96,8 @@ function calRender() {
     const evtHtml = evts.slice(0, MAX_VISIBLE).map(ev => {
       const cfg = CAL_CAT[ev.category] || CAL_CAT.muu;
       const doneStyle = ev.done ? "opacity:.5;text-decoration:line-through;" : "";
-      return `<div class="cal-evt ${cfg.cls}" style="${doneStyle}" title="${escapeHtml(ev.title)}${ev.sub ? " · " + escapeHtml(ev.sub) : ""}">${escapeHtml(ev.title)}</div>`;
+      const manualAttr = ev.isManual ? `data-cal-evt-id="${escapeHtml(ev.rawId)}"` : "";
+      return `<div class="cal-evt ${cfg.cls}" ${manualAttr} style="${doneStyle}" title="${escapeHtml(ev.title)}${ev.sub ? " · " + escapeHtml(ev.sub) : ""}">${escapeHtml(ev.title)}</div>`;
     }).join("");
 
     const moreHtml = overflow > 0 ? `<div class="cal-evt-more">+${overflow} lisää</div>` : "";
@@ -122,16 +123,12 @@ function calRender() {
   // Delete manual events on right-click (context menu)
   grid.querySelectorAll(".cal-cell[data-cal-date]").forEach(cell => {
     cell.addEventListener("contextmenu", e => {
-      const evtEl = e.target.closest(".cal-evt");
+      const evtEl = e.target.closest("[data-cal-evt-id]");
       if (!evtEl) return;
-      // Find the event from the cell's date
-      const dateStr2 = cell.dataset.calDate;
-      const allEvts = calEventsForDate(dateStr2);
-      // Try to find by title match (manual events only)
-      const title = evtEl.title.split(" · ")[0];
-      const manual = (state.calendarEvents || []).find(ev => ev.date === dateStr2 && ev.title === title);
-      if (!manual) return; // don't allow deleting deadlines from here
       e.preventDefault();
+      const evtId = evtEl.dataset.calEvtId;
+      const manual = (state.calendarEvents || []).find(ev => ev.id === evtId);
+      if (!manual) return;
       if (confirm(`Poistetaanko tapahtuma "${manual.title}"?`)) {
         state.calendarEvents = state.calendarEvents.filter(ev => ev.id !== manual.id);
         saveState(false);

@@ -332,7 +332,7 @@ function bindEvents() {
           all.map(c => `<option value="${c.id}" ${c.id === cur ? "selected" : ""}>${escapeHtml(c.name || "(nimetön)")}</option>`).join("");
       }
       if (btn.dataset.tab === "kalenteri") {
-        if (typeof calRender === "function") calRender();
+        calRender();
         calRefreshCourseSelect();
       }
     });
