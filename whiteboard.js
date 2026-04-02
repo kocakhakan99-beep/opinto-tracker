@@ -193,12 +193,14 @@ function ptMountNote(note, canvas) {
       <input type="color" class="sn-fmt-color" title="Tekstin väri" value="#333333" />
       <div class="sn-fmt-sep"></div>
       <select class="sn-fmt-size" title="Tekstikoko">
+        <option value="8px">8</option>
         <option value="10px">10</option>
-        <option value="13px">13</option>
-        <option value="16px" selected>16</option>
+        <option value="12px">12</option>
+        <option value="14px" selected>14</option>
+        <option value="16px">16</option>
+        <option value="18px">18</option>
         <option value="20px">20</option>
-        <option value="26px">26</option>
-        <option value="34px">34</option>
+        <option value="24px">24</option>
       </select>
     </div>
     <div class="sn-body-rich" contenteditable="true" spellcheck="true" data-sn-body>${note.body||""}</div>
@@ -523,6 +525,7 @@ function ptAddImageFromFile(file, dropX, dropY) {
 // ── Drawing ──
 function ptStartDraw(e) {
   if (ptActiveTool!=="pen"&&ptActiveTool!=="eraser") return;
+  ptSaveDrawing(); // Save current canvas state before snapshotting
   ptSnapshot();
   ptDrawing=true;
   const c=ptGetCanvas(); const rect=c.getBoundingClientRect();
@@ -672,9 +675,10 @@ function ptBindEvents() {
   // Drag-and-drop
   const wrap=document.getElementById("ptCanvas");
   if (wrap) {
-    wrap.addEventListener("dragover",e=>{ e.preventDefault(); wrap.classList.add("pt-drag-over"); });
-    wrap.addEventListener("dragleave",()=>wrap.classList.remove("pt-drag-over"));
+    wrap.addEventListener("dragover",e=>{ if(ptDrawing) return; e.preventDefault(); wrap.classList.add("pt-drag-over"); });
+    wrap.addEventListener("dragleave",()=>{ if(ptDrawing) return; wrap.classList.remove("pt-drag-over"); });
     wrap.addEventListener("drop",e=>{
+      if(ptDrawing) return;
       e.preventDefault(); wrap.classList.remove("pt-drag-over");
       const rect=wrap.getBoundingClientRect();
       const dropX=e.clientX-rect.left, dropY=e.clientY-rect.top;
@@ -737,9 +741,9 @@ function ptBindEvents() {
     }
   });
 
-  // Clear selection on canvas background click
+  // Clear selection on canvas background click (only in select mode)
   document.getElementById("ptCanvas")?.addEventListener("mousedown",e=>{
-    if(e.target.id==="ptCanvas"||e.target.id==="ptDrawCanvas") ptSelectedEl=null;
+    if(ptActiveTool==="select" && (e.target.id==="ptCanvas"||e.target.id==="ptDrawCanvas")) ptSelectedEl=null;
   });
 }
 

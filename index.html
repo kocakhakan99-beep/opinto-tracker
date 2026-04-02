@@ -20,14 +20,19 @@
     <div class="topbar-r">
       <button class="topbar-icon-btn" id="btnExport" title="Vie CSV"><span id="icoDownload"></span></button>
       <button class="topbar-icon-btn" id="btnImport" title="Tuo CSV"><span id="icoUpload"></span></button>
-      <select id="colorScheme" class="input" style="max-width:140px;font-size:12px;padding:6px 9px" title="Väriteema">
-        <option value="default">Oletus</option>
-        <option value="pink">🌸 Pinkki</option>
-        <option value="baby-blue">🩵 Vaaleansininen</option>
-        <option value="olive">🌿 Oliivinvihreä</option>
-        <option value="brown">🤎 Vaaleanruskea</option>
-        <option value="pastel">💛 Pastellinkeltainen</option>
-      </select>
+      <div class="scheme-btn-wrap" style="position:relative">
+        <button class="topbar-icon-btn" id="btnColorScheme" title="Väriteema">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--text2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/><circle cx="8" cy="9" r="1.5" fill="var(--text2)" stroke="none"/><circle cx="16" cy="9" r="1.5" fill="var(--text2)" stroke="none"/><circle cx="12" cy="16" r="1.5" fill="var(--text2)" stroke="none"/></svg>
+        </button>
+        <div class="scheme-popup" id="schemePopup" hidden>
+          <div class="scheme-popup-item" data-scheme-val="default">Oletus</div>
+          <div class="scheme-popup-item" data-scheme-val="pink">🌸 Pinkki</div>
+          <div class="scheme-popup-item" data-scheme-val="baby-blue">🩵 Vaaleansininen</div>
+          <div class="scheme-popup-item" data-scheme-val="olive">🌿 Oliivinvihreä</div>
+          <div class="scheme-popup-item" data-scheme-val="brown">🤎 Vaaleanruskea</div>
+          <div class="scheme-popup-item" data-scheme-val="pastel">💛 Pastellinkeltainen</div>
+        </div>
+      </div>
       <button class="theme-btn" id="btnTheme" title="Vaihda teema">
         <svg id="icoMoon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg id="icoSun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -54,6 +59,9 @@
         </div>
         <div class="flex">
           <span class="pill"><span class="kbd">Ctrl S</span> tallentaa</span>
+          <button class="btn btn-ghost btn-icon" id="btnCollapseAll" title="Pienennä kaikki">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6"/><path d="M20 10h-6V4"/><path d="M14 10l7-7"/><path d="M3 21l7-7"/></svg>
+          </button>
           <button class="btn btn-primary" id="btnAddPeriod"><span id="icoPlus"></span>Lisää lukujakso</button>
         </div>
       </div>
@@ -157,10 +165,12 @@
         <div class="pt-sep"></div>
 
         <!-- Grid -->
-        <span style="font-size:11.5px;color:var(--text2);font-weight:500">Ruudukko:</span>
-        <button class="pt-tool-btn active" id="ptGridDot" data-grid="dot">Pisteet</button>
-        <button class="pt-tool-btn" id="ptGridLine" data-grid="line">Viivat</button>
-        <button class="pt-tool-btn" id="ptGridNone" data-grid="none">Ei</button>
+        <div style="display:inline-flex;align-items:center;gap:6px;flex-shrink:0">
+          <span style="font-size:11.5px;color:var(--text2);font-weight:500">Ruudukko:</span>
+          <button class="pt-tool-btn active" id="ptGridDot" data-grid="dot">Pisteet</button>
+          <button class="pt-tool-btn" id="ptGridLine" data-grid="line">Viivat</button>
+          <button class="pt-tool-btn" id="ptGridNone" data-grid="none">Ei</button>
+        </div>
 
         <div class="pt-sep"></div>
         <span style="font-size:11.5px;color:var(--text2);font-weight:500;margin-left:2px">Sivut:</span>

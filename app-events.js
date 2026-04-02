@@ -10,13 +10,33 @@ function bindEvents() {
     saveState(false);
   });
 
-  // — Color scheme selector —
-  const schemeEl = $("#colorScheme");
-  if (schemeEl) {
-    schemeEl.value = state.colorScheme || "default";
-    schemeEl.addEventListener("change", () => {
-      applyScheme(schemeEl.value);
+  // — Color scheme popup —
+  const btnCS = $("#btnColorScheme");
+  const schemePopup = $("#schemePopup");
+  const schemeWrap = btnCS?.closest(".scheme-btn-wrap");
+  if (btnCS && schemePopup && schemeWrap) {
+    // Mark the active scheme
+    function updateSchemePopup() {
+      schemePopup.querySelectorAll(".scheme-popup-item").forEach(item => {
+        item.classList.toggle("active", item.dataset.schemeVal === (state.colorScheme || "default"));
+      });
+    }
+    updateSchemePopup();
+    btnCS.addEventListener("click", e => {
+      e.stopPropagation();
+      schemePopup.hidden = !schemePopup.hidden;
+      if (!schemePopup.hidden) updateSchemePopup();
+    });
+    schemePopup.addEventListener("click", e => {
+      const item = e.target.closest("[data-scheme-val]");
+      if (!item) return;
+      applyScheme(item.dataset.schemeVal);
       saveState(false);
+      updateSchemePopup();
+      schemePopup.hidden = true;
+    });
+    document.addEventListener("click", e => {
+      if (!schemeWrap.contains(e.target)) schemePopup.hidden = true;
     });
   }
 
@@ -55,6 +75,18 @@ function bindEvents() {
     saveState();
     renderPeriods();
     renderStats();
+  });
+
+  // — Collapse All —
+  $("#btnCollapseAll")?.addEventListener("click", () => {
+    for (const p of state.periods) {
+      collapsedPeriods.add(p.id);
+      for (const c of p.courses) collapsedCourses.add(c.id);
+    }
+    document.querySelectorAll("[data-period-body]").forEach(body => { body.style.display = "none"; });
+    document.querySelectorAll(".period-hd .chevron").forEach(ch => ch.classList.remove("open"));
+    document.querySelectorAll("[data-course-body]").forEach(body => { body.style.display = "none"; });
+    document.querySelectorAll(".course-hd .chevron").forEach(ch => ch.classList.remove("open"));
   });
 
   // — Export CSV —
@@ -122,6 +154,8 @@ function bindEvents() {
       const open = body.style.display !== "none";
       body.style.display = open ? "none" : "";
       btn.querySelector(".chevron")?.classList.toggle("open", !open);
+      if (open) collapsedPeriods.add(periodId);
+      else collapsedPeriods.delete(periodId);
       return;
     }
     if (action === "toggle-course") {
@@ -130,6 +164,8 @@ function bindEvents() {
       const open = body.style.display !== "none";
       body.style.display = open ? "none" : "";
       btn.querySelector(".chevron")?.classList.toggle("open", !open);
+      if (open) collapsedCourses.add(courseId);
+      else collapsedCourses.delete(courseId);
       return;
     }
     if (action === "add-course") {
@@ -212,13 +248,6 @@ function bindEvents() {
       if (field === "name")    { c.name = t.value; }
       else if (field === "credits") { c.credits = asNumber(t.value) ?? 0; }
       else if (field === "display") { c.display = t.value === "true"; }
-      else if (field === "status") {
-        c.status = t.value;
-        saveState(false);
-        rerenderCourseCard(periodId, courseId);
-        renderStats(); updatePeriodHeader(periodId);
-        return;
-      }
       else if (field === "target") {
         c.target = asNumber(t.value);
         saveState(false);
