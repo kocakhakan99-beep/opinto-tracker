@@ -125,21 +125,6 @@ function calRender() {
   }
 
   grid.innerHTML = html;
-
-  // Delete manual events on right-click (context menu)
-  grid.addEventListener("contextmenu", function onCtx(e) {
-    const evtEl = e.target.closest("[data-cal-evt-id]");
-    if (!evtEl) return;
-    e.preventDefault();
-    const evtId = evtEl.dataset.calEvtId;
-    const manual = (state.calendarEvents || []).find(ev => ev.id === evtId);
-    if (!manual) return;
-    if (confirm(`Poistetaanko tapahtuma "${manual.title}"?`)) {
-      state.calendarEvents = state.calendarEvents.filter(ev => ev.id !== manual.id);
-      saveState(false);
-      calRender();
-    }
-  }, { once: true });
 }
 
 // Bind calendar events — called once after state is ready (from app-init.js or tab open)
@@ -164,6 +149,22 @@ function calBindEvents() {
     calYear = now.getFullYear();
     calMonth = now.getMonth();
     calRender();
+  });
+
+  // Delete manual events on right-click (bound once, uses event delegation on static #calGrid)
+  const gridEl = document.getElementById("calGrid");
+  if (gridEl) gridEl.addEventListener("contextmenu", e => {
+    const evtEl = e.target.closest("[data-cal-evt-id]");
+    if (!evtEl) return;
+    e.preventDefault();
+    const evtId = evtEl.dataset.calEvtId;
+    const manual = (state.calendarEvents || []).find(ev => ev.id === evtId);
+    if (!manual) return;
+    if (confirm(`Poistetaanko tapahtuma "${manual.title}"?`)) {
+      state.calendarEvents = state.calendarEvents.filter(ev => ev.id !== manual.id);
+      saveState(false);
+      calRender();
+    }
   });
 
   if (addBtn) addBtn.addEventListener("click", () => {
