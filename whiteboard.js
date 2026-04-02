@@ -36,10 +36,8 @@ function ptNormImg(img) {
     x: +(img.x)||60, y: +(img.y)||60,
     w: Math.max(60,+(img.w)||240), h: Math.max(40,+(img.h)||180),
     src: img.src||"",
-    // crop: {x,y,w,h} in 0-1 fractions of original image
-    crop: img.crop || null,
-    // overlay: {color, opacity}
-    overlay: img.overlay || null
+    overlay: img.overlay || null,
+    blendMode: img.blendMode || "multiply"
   };
 }
 
@@ -194,20 +192,8 @@ function ptMountNote(note, canvas) {
       <button class="sn-fmt-btn" data-fmt="underline" title="Alleviivaus"><u>U</u></button>
       <div class="sn-fmt-sep"></div>
       <input type="color" class="sn-fmt-color" title="Tekstin väri" value="#333333" />
-      <div class="sn-fmt-sep"></div>
-      <select class="sn-fmt-size" title="Tekstikoko">
-        <option value="8px">8</option>
-        <option value="10px">10</option>
-        <option value="12px">12</option>
-        <option value="13px" selected>13</option>
-        <option value="14px">14</option>
-        <option value="16px">16</option>
-        <option value="18px">18</option>
-        <option value="20px">20</option>
-        <option value="24px">24</option>
-      </select>
     </div>
-    <div class="sn-body-rich" contenteditable="true" spellcheck="true" data-sn-body style="font-size:${note.fontSize||"13px"}">${note.body||""}</div>
+    <div class="sn-body-rich" contenteditable="true" spellcheck="true" data-sn-body>${note.body||""}</div>
     <div class="sn-resize" data-resize-handle title="Muuta kokoa">
       <svg viewBox="0 0 10 10"><path d="M2 8 L8 2M5 8 L8 5"/></svg>
     </div>`;
@@ -269,35 +255,6 @@ function ptBindNote(el, note) {
     ptSave();
   });
 
-  const sizeSelect = el.querySelector(".sn-fmt-size");
-  if(sizeSelect) {
-    // Sync select to note's stored font size
-    sizeSelect.value = note.fontSize || "13px";
-    sizeSelect.addEventListener("change", ()=>{
-      const sz = sizeSelect.value;
-      note.fontSize = sz;
-      // Always update the body element's base font size
-      if(body) body.style.fontSize = sz;
-      // Also apply to any selected text
-      const sel = window.getSelection();
-      if(sel && sel.rangeCount && !sel.isCollapsed) {
-        const range = sel.getRangeAt(0);
-        const span = document.createElement("span");
-        span.style.fontSize = sz;
-        try { range.surroundContents(span); } catch(e) {
-          document.execCommand("styleWithCSS", false, true);
-          document.execCommand("fontSize", false, "7");
-          if(body) body.querySelectorAll("font[size='7']").forEach(f=>{
-            f.removeAttribute("size");
-            f.style.fontSize = sz;
-          });
-        }
-        sel.removeAllRanges();
-      }
-      note.body = body?.innerHTML || note.body;
-      ptSave();
-    });
-  }
   const cb=el.querySelector("[data-color-btn]");
   cb.addEventListener("click",e=>{
     e.stopPropagation();
@@ -325,18 +282,14 @@ function ptMountImage(imgData, canvas) {
   el.className="pt-img"; el.dataset.imgId=imgData.id;
   el.style.cssText=`left:${imgData.x}px;top:${imgData.y}px;width:${imgData.w}px;height:${imgData.h}px;z-index:2`;
 
-  // Build CSS for crop using object-fit + object-position
-  const cropStyle = imgData.crop
-    ? `object-fit:none;object-position:${-imgData.crop.x*100/(imgData.crop.w||1)}% ${-imgData.crop.y*100/(imgData.crop.h||1)}%;width:${100/imgData.crop.w}%;height:${100/imgData.crop.h}%`
-    : `object-fit:contain;width:100%;height:100%`;
-
+  const blendMode = imgData.blendMode || "multiply";
   const tintStyle = imgData.overlay && imgData.overlay.opacity > 0
-    ? `background:${imgData.overlay.color};opacity:${imgData.overlay.opacity};`
+    ? `background:${imgData.overlay.color};opacity:${imgData.overlay.opacity};mix-blend-mode:${blendMode};`
     : "opacity:0;";
 
   el.innerHTML=`
     <div style="position:relative;width:100%;height:100%;overflow:hidden;border-radius:8px">
-      <img class="pt-img-inner" src="${imgData.src}" draggable="false" style="${cropStyle}" />
+      <img class="pt-img-inner" src="${imgData.src}" draggable="false" style="object-fit:contain;width:100%;height:100%" />
       <div class="pt-img-tint" style="${tintStyle}"></div>
     </div>
     <div class="pt-img-resize" data-img-resize title="Muuta kokoa"></div>
@@ -393,8 +346,13 @@ function ptOpenImageEditor(imgData, imgEl) {
   const editor = document.createElement("div");
   editor.className = "pt-img-editor";
 
-  const crop = imgData.crop || {x:0,y:0,w:1,h:1};
   const overlay = imgData.overlay || {color:"#ff0000",opacity:0};
+  const blendMode = imgData.blendMode || "multiply";
+
+  const blendModes = [
+    "normal","multiply","screen","overlay","darken","lighten",
+    "color-dodge","color-burn","hard-light","soft-light","difference","exclusion","hue","saturation","color","luminosity"
+  ];
 
   editor.innerHTML = `
     <div class="pt-img-editor-hd">
@@ -402,16 +360,6 @@ function ptOpenImageEditor(imgData, imgEl) {
       <button class="pt-img-ed-close" title="Sulje">×</button>
     </div>
     <div class="pt-img-editor-body">
-      <div class="pt-ed-section">
-        <div class="pt-ed-label">Rajaus (0–1, osuus alkuperäisestä)</div>
-        <div class="pt-ed-row">
-          <label>X <input type="number" id="ptCropX" step="0.01" min="0" max="1" value="${crop.x.toFixed(2)}" /></label>
-          <label>Y <input type="number" id="ptCropY" step="0.01" min="0" max="1" value="${crop.y.toFixed(2)}" /></label>
-          <label>L <input type="number" id="ptCropW" step="0.01" min="0.05" max="1" value="${crop.w.toFixed(2)}" /></label>
-          <label>K <input type="number" id="ptCropH" step="0.01" min="0.05" max="1" value="${crop.h.toFixed(2)}" /></label>
-        </div>
-        <button class="pt-ed-btn" id="ptResetCrop">Nollaa rajaus</button>
-      </div>
       <div class="pt-ed-section">
         <div class="pt-ed-label">Värisuodatin</div>
         <div class="pt-ed-row" style="align-items:center;gap:10px">
@@ -421,12 +369,17 @@ function ptOpenImageEditor(imgData, imgEl) {
           </label>
           <span id="ptOverlayOpacityVal" style="font-family:var(--font-mono);font-size:11px;min-width:28px">${Math.round((overlay.opacity||0)*100)}%</span>
         </div>
-        <button class="pt-ed-btn" id="ptResetOverlay">Poista suodatin</button>
+        <div class="pt-ed-row" style="align-items:center;gap:8px;margin-top:4px">
+          <label style="font-size:12px;color:var(--text2)">Sekoitustila</label>
+          <select id="ptOverlayBlend" style="flex:1;padding:3px 6px;border-radius:6px;border:1px solid var(--line2);background:var(--input-bg);color:var(--text);font-size:12px">
+            ${blendModes.map(m=>`<option value="${m}"${m===blendMode?" selected":""}>${m}</option>`).join("")}
+          </select>
+        </div>
+        <button class="pt-ed-btn" id="ptResetOverlay" style="margin-top:6px">Poista suodatin</button>
       </div>
     </div>`;
 
   // Position editor near the image
-  const rect = imgEl.getBoundingClientRect();
   const cRect = canvas.getBoundingClientRect();
   const ex = Math.min(imgData.x + imgData.w + 10, cRect.width - 300);
   const ey = Math.max(0, imgData.y);
@@ -434,43 +387,21 @@ function ptOpenImageEditor(imgData, imgEl) {
 
   canvas.appendChild(editor);
 
-  // Live crop update
-  function applyCrop() {
-    const x = parseFloat(document.getElementById("ptCropX").value)||0;
-    const y = parseFloat(document.getElementById("ptCropY").value)||0;
-    const w = parseFloat(document.getElementById("ptCropW").value)||1;
-    const h = parseFloat(document.getElementById("ptCropH").value)||1;
-    imgData.crop = { x: clamp(x,0,0.95), y: clamp(y,0,0.95), w: clamp(w,0.05,1), h: clamp(h,0.05,1) };
-    refreshImgElement();
-    ptSave();
-  }
-
-  ["ptCropX","ptCropY","ptCropW","ptCropH"].forEach(id => {
-    document.getElementById(id).addEventListener("input", applyCrop);
-  });
-
-  document.getElementById("ptResetCrop").addEventListener("click", () => {
-    imgData.crop = null;
-    refreshImgElement();
-    ptSave();
-    document.getElementById("ptCropX").value = "0";
-    document.getElementById("ptCropY").value = "0";
-    document.getElementById("ptCropW").value = "1";
-    document.getElementById("ptCropH").value = "1";
-  });
-
   // Live overlay update
   function applyOverlay() {
     const color = document.getElementById("ptOverlayColor").value;
     const opacity = parseFloat(document.getElementById("ptOverlayOpacity").value)||0;
+    const blend = document.getElementById("ptOverlayBlend").value;
     document.getElementById("ptOverlayOpacityVal").textContent = Math.round(opacity*100)+"%";
     imgData.overlay = opacity > 0 ? {color, opacity} : null;
+    imgData.blendMode = blend;
     refreshImgElement();
     ptSave();
   }
 
   document.getElementById("ptOverlayColor").addEventListener("input", applyOverlay);
   document.getElementById("ptOverlayOpacity").addEventListener("input", applyOverlay);
+  document.getElementById("ptOverlayBlend").addEventListener("change", applyOverlay);
 
   document.getElementById("ptResetOverlay").addEventListener("click", () => {
     imgData.overlay = null;
@@ -483,26 +414,13 @@ function ptOpenImageEditor(imgData, imgEl) {
   editor.querySelector(".pt-img-ed-close").addEventListener("click", () => editor.remove());
 
   function refreshImgElement() {
-    const inner = imgEl.querySelector(".pt-img-inner");
-    if (inner) {
-      if (imgData.crop) {
-        const c = imgData.crop;
-        inner.style.objectFit = "none";
-        inner.style.width = (100/c.w)+"%";
-        inner.style.height = (100/c.h)+"%";
-        inner.style.objectPosition = `${(-c.x/c.w*100)}% ${(-c.y/c.h*100)}%`;
-      } else {
-        inner.style.objectFit = "contain";
-        inner.style.width = "100%";
-        inner.style.height = "100%";
-        inner.style.objectPosition = "";
-      }
-    }
     const tintEl = imgEl.querySelector(".pt-img-tint");
     if(tintEl) {
+      const blend = document.getElementById("ptOverlayBlend")?.value || imgData.blendMode || "multiply";
       if(imgData.overlay && imgData.overlay.opacity > 0) {
         tintEl.style.background = imgData.overlay.color;
         tintEl.style.opacity = imgData.overlay.opacity;
+        tintEl.style.mixBlendMode = blend;
       } else {
         tintEl.style.opacity = "0";
       }

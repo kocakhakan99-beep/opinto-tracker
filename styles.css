@@ -333,7 +333,7 @@
     .pt-pages::-webkit-scrollbar{display:none}
     /* wrapper for tab + its delete button */
     .pt-page-tab-wrap{display:inline-flex;align-items:center;gap:2px;position:relative}
-    .pt-page-tab{padding:6px 16px;border-radius:7px;border:1px solid var(--line2);background:transparent;color:var(--text2);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:background var(--t),color var(--t),border-color var(--t)}
+    .pt-page-tab{padding:7px 22px;border-radius:7px;border:1px solid var(--line2);background:transparent;color:var(--text2);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:background var(--t),color var(--t),border-color var(--t)}
     .pt-page-tab:hover{background:var(--surface3);color:var(--text)}
     .pt-page-tab.active{background:var(--tab-act);border-color:rgba(109,84,245,.3);color:var(--accent)}
     /* delete button — sits outside the tab, visible only on wrap hover or active */
@@ -350,7 +350,7 @@
     .pt-add-page{padding:6px 10px;border-radius:7px;border:1px dashed var(--line2);background:transparent;color:var(--text2);font-size:16px;cursor:pointer;line-height:1;transition:background var(--t),color var(--t)}
     .pt-add-page:hover{background:var(--surface3);color:var(--text)}
     #ptDrawCanvas{position:absolute;top:0;left:0;touch-action:none;z-index:100;pointer-events:none}
-    .pt-canvas-wrap{position:relative;overflow:hidden;background:var(--pt-paper);min-height:620px;cursor:default}
+    .pt-canvas-wrap{position:relative;overflow:hidden;background-color:var(--pt-paper);min-height:620px;cursor:default}
     .pt-grid-dot{background-image:radial-gradient(circle,var(--pt-grid) 1px,transparent 1px);background-size:24px 24px}
     .pt-grid-line{background-image:linear-gradient(var(--pt-grid) 1px,transparent 1px),linear-gradient(90deg,var(--pt-grid) 1px,transparent 1px);background-size:24px 24px}
     .pt-grid-none{background-image:none !important}
@@ -396,11 +396,11 @@
     .cs-suoritettu {background:rgba(43,207,160,.12);color:var(--success);border:1px solid rgba(43,207,160,.28)}
 
     /* ═══ NOTEBOOK CANVAS (muistivihko) ═══ */
-    [data-theme="dark"]  { --pt-paper:#0c1420; --pt-grid:rgba(255,255,255,.06); --pt-line-l:rgba(110,84,245,.12); }
-    [data-theme="light"] { --pt-paper:#fffef9; --pt-grid:rgba(0,0,0,.07);       --pt-line-l:rgba(110,84,245,.1); }
+    [data-theme="dark"]  { --pt-paper:#0c1420; --pt-grid:rgba(255,255,255,.09); --pt-line-l:rgba(110,84,245,.12); }
+    [data-theme="light"] { --pt-paper:#fffef9; --pt-grid:rgba(0,0,0,.1);        --pt-line-l:rgba(110,84,245,.1); }
     #ptDrawCanvas{position:absolute;top:0;left:0;touch-action:none;z-index:100;pointer-events:none}
     .pt-canvas-wrap{
-      position:relative;overflow:hidden;background:var(--pt-paper);min-height:640px;cursor:default;
+      position:relative;overflow:hidden;background-color:var(--pt-paper);min-height:640px;cursor:default;
       box-shadow:inset 4px 0 0 var(--pt-line-l);
     }
     /* spiral binding suggestion */
@@ -684,19 +684,38 @@
 
     /* ═══ PRINT / PDF EXPORT ═══ */
     @media print {
-      body{background:#fff !important;color:#000 !important}
-      .topbar,.tabs-bar,.toast,
-      .btn-primary,.btn-ghost,.btn-danger,
-      #btnPrintPdf,#btnExport,#btnImport,#btnColorScheme,#btnTheme,
-      .period-actions,.course-hd button,.mod-toggle,
-      .pt-toolbar,.pt-pages,.pt-add-page,
-      .dl-add,.cal-add-form,.cal-nav button#calToday
+      body { background:#fff !important; color:#000 !important }
+
+      /* Hide global chrome */
+      .topbar,.tabs-bar,.toast { display:none !important }
+
+      /* Hide non-active tab panels */
+      .tab-panel:not(.active) { display:none !important }
+      .app { max-width:100%; padding:0 }
+
+      /* --- Opinnot / Deadlinet --- */
+      #tab-opinnot .period-actions,
+      #tab-opinnot .course-hd button,
+      #tab-opinnot .mod-toggle,
+      #tab-opinnot #btnCollapseAll,
+      #tab-opinnot #btnToggleOpinnot,
+      #tab-opinnot #btnAddPeriod,
+      #tab-deadlinet .dl-add
       { display:none !important }
-      .tab-panel:not(.active){display:none !important}
-      .app{max-width:100%;padding:0}
-      .card,.period-card,.course-card,.cal-shell{box-shadow:none;border:1px solid #ccc}
-      .cal-grid{gap:1px;background:#ccc}
-      .cal-cell{min-height:70px}
-      .pt-canvas-wrap{min-height:0}
+      .card,.period-card,.course-card { box-shadow:none; border:1px solid #ccc }
+
+      /* --- Kalenteri --- */
+      #calAddSection { display:none !important }
+      .cal-nav button { display:none !important }
+      .cal-shell { box-shadow:none }
+      .cal-grid { gap:1px; background:#ccc }
+      .cal-cell { min-height:70px }
+
+      /* --- Muistivihko --- */
+      #tab-piirtotaulu.active .pt-toolbar { display:none !important }
+      #tab-piirtotaulu.active .pt-pages   { display:none !important }
+      #tab-piirtotaulu.active .pt-canvas-wrap { min-height:0 !important; box-shadow:none }
+      /* ptPrintImg is appended via beforeprint — canvas itself won't print */
+      #tab-piirtotaulu.active #ptDrawCanvas { display:none }
     }
 

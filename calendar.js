@@ -10,43 +10,43 @@ const FI_MONTHS = [
   "Heinäkuu","Elokuu","Syyskuu","Lokakuu","Marraskuu","Joulukuu"
 ];
 
-// Category display config
-const CAL_CAT = {
-  kurssi:   { label: "Kurssi",   cls: "cal-cat-kurssi"   },
-  muu:      { label: "Muu",      cls: "cal-cat-muu"      },
-  personal: { label: "Personal", cls: "cal-cat-personal"  },
-  deadline: { label: "Deadline", cls: "cal-cat-deadline"  }
-};
+// Map deadline urgency class to readable background color with opacity
+function calDeadlineStyle(dl) {
+  const { cls } = deadlineDaysInfo(dl.date);
+  const done = dl.done;
+  if (done) return { bg: "rgba(43,207,160,.15)", border: "rgba(43,207,160,.3)", color: "var(--success)" };
+  switch (cls) {
+    case "dl-u-red":    return { bg: "rgba(240,80,112,.15)",  border: "rgba(240,80,112,.3)",  color: "var(--danger)" };
+    case "dl-u-yellow": return { bg: "rgba(240,192,64,.15)",  border: "rgba(240,192,64,.3)",  color: "var(--warn)" };
+    case "dl-u-green":  return { bg: "rgba(43,207,160,.15)",  border: "rgba(43,207,160,.3)",  color: "var(--success)" };
+    default:            return { bg: "rgba(109,84,245,.12)",  border: "rgba(109,84,245,.25)", color: "var(--accent)" };
+  }
+}
 
 // Gather all events for a given YYYY-MM-DD date string
 function calEventsForDate(dateStr) {
   const evts = [];
 
-  // Course deadlines
+  // Course deadlines — urgency-colored
   for (const dl of (state.deadlines || [])) {
     if (dl.date === dateStr) {
-      const course = getAllCourses().find(c => c.id === dl.courseId);
       evts.push({
-        id: "dl_" + dl.id,
+        isDeadline: true,
         title: dl.name || "(nimetön)",
-        sub: course ? course.name : "",
-        category: "deadline",
+        style: calDeadlineStyle(dl),
         done: dl.done
       });
     }
   }
 
-  // Manual calendar events
+  // Manual calendar events — custom color
   for (const e of (state.calendarEvents || [])) {
     if (e.date === dateStr) {
-      const course = e.category === "kurssi" ? getAllCourses().find(c => c.id === e.courseId) : null;
       evts.push({
-        id: "ce_" + e.id,
-        title: e.title || "(nimetön)",
-        sub: course ? course.name : "",
-        category: e.category,
         isManual: true,
-        rawId: e.id
+        rawId: e.id,
+        title: e.title || "(nimetön)",
+        color: e.color || "#6d54f5"
       });
     }
   }
@@ -94,10 +94,16 @@ function calRender() {
     const overflow = evts.length - MAX_VISIBLE;
 
     const evtHtml = evts.slice(0, MAX_VISIBLE).map(ev => {
-      const cfg = CAL_CAT[ev.category] || CAL_CAT.muu;
-      const doneStyle = ev.done ? "opacity:.5;text-decoration:line-through;" : "";
-      const manualAttr = ev.isManual ? `data-cal-evt-id="${escapeHtml(ev.rawId)}"` : "";
-      return `<div class="cal-evt ${cfg.cls}" ${manualAttr} style="${doneStyle}" title="${escapeHtml(ev.title)}${ev.sub ? " · " + escapeHtml(ev.sub) : ""}">${escapeHtml(ev.title)}</div>`;
+      if (ev.isDeadline) {
+        const s = ev.style;
+        const doneStyle = ev.done ? "text-decoration:line-through;opacity:.6;" : "";
+        return `<div class="cal-evt" style="background:${s.bg};border:1px solid ${s.border};color:${s.color};${doneStyle}" title="${escapeHtml(ev.title)}">${escapeHtml(ev.title)}</div>`;
+      } else {
+        // Manual event — use custom color
+        const hex = ev.color || "#6d54f5";
+        const manualAttr = `data-cal-evt-id="${escapeHtml(ev.rawId)}"`;
+        return `<div class="cal-evt" ${manualAttr} style="background:${hex}22;border:1px solid ${hex}55;color:${hex}" title="${escapeHtml(ev.title)}">${escapeHtml(ev.title)}</div>`;
+      }
     }).join("");
 
     const moreHtml = overflow > 0 ? `<div class="cal-evt-more">+${overflow} lisää</div>` : "";
@@ -121,40 +127,27 @@ function calRender() {
   grid.innerHTML = html;
 
   // Delete manual events on right-click (context menu)
-  grid.querySelectorAll(".cal-cell[data-cal-date]").forEach(cell => {
-    cell.addEventListener("contextmenu", e => {
-      const evtEl = e.target.closest("[data-cal-evt-id]");
-      if (!evtEl) return;
-      e.preventDefault();
-      const evtId = evtEl.dataset.calEvtId;
-      const manual = (state.calendarEvents || []).find(ev => ev.id === evtId);
-      if (!manual) return;
-      if (confirm(`Poistetaanko tapahtuma "${manual.title}"?`)) {
-        state.calendarEvents = state.calendarEvents.filter(ev => ev.id !== manual.id);
-        saveState(false);
-        calRender();
-      }
-    });
-  });
+  grid.addEventListener("contextmenu", function onCtx(e) {
+    const evtEl = e.target.closest("[data-cal-evt-id]");
+    if (!evtEl) return;
+    e.preventDefault();
+    const evtId = evtEl.dataset.calEvtId;
+    const manual = (state.calendarEvents || []).find(ev => ev.id === evtId);
+    if (!manual) return;
+    if (confirm(`Poistetaanko tapahtuma "${manual.title}"?`)) {
+      state.calendarEvents = state.calendarEvents.filter(ev => ev.id !== manual.id);
+      saveState(false);
+      calRender();
+    }
+  }, { once: true });
 }
 
-// Refresh the course selector in the add-event form
-function calRefreshCourseSelect() {
-  const sel = document.getElementById("calEvtCourse");
-  if (!sel) return;
-  const all = getAllCourses();
-  sel.innerHTML = `<option value="">Valitse kurssi…</option>` +
-    all.map(c => `<option value="${c.id}">${escapeHtml(c.name || "(nimetön)")}</option>`).join("");
-}
-
-// Bind calendar events
+// Bind calendar events — called once after state is ready (from app-init.js or tab open)
 function calBindEvents() {
   const prevBtn  = document.getElementById("calPrev");
   const nextBtn  = document.getElementById("calNext");
   const todayBtn = document.getElementById("calToday");
   const addBtn   = document.getElementById("calBtnAdd");
-  const catSel   = document.getElementById("calEvtCategory");
-  const courseSel = document.getElementById("calEvtCourse");
 
   if (prevBtn) prevBtn.addEventListener("click", () => {
     calMonth--;
@@ -173,51 +166,31 @@ function calBindEvents() {
     calRender();
   });
 
-  // Show/hide course selector based on category
-  if (catSel && courseSel) {
-    catSel.addEventListener("change", () => {
-      courseSel.style.display = catSel.value === "kurssi" ? "" : "none";
-    });
-  }
-
   if (addBtn) addBtn.addEventListener("click", () => {
     const title = (document.getElementById("calEvtTitle")?.value || "").trim();
     const date  = document.getElementById("calEvtDate")?.value || "";
-    const category = document.getElementById("calEvtCategory")?.value || "muu";
-    const courseId = category === "kurssi" ? (document.getElementById("calEvtCourse")?.value || "") : "";
+    const color = document.getElementById("calEvtColor")?.value || "#6d54f5";
 
     if (!title) { toast("Anna tapahtumalle otsikko"); return; }
     if (!date)  { toast("Valitse päivämäärä"); return; }
-    if (category === "kurssi" && !courseId) { toast("Valitse kurssi"); return; }
 
     if (!state.calendarEvents) state.calendarEvents = [];
-    state.calendarEvents.push({ id: uid(), title, category, courseId, date });
+    state.calendarEvents.push({ id: uid(), title, color, date });
     saveState(false);
     calRender();
 
     // Clear form
     document.getElementById("calEvtTitle").value = "";
     document.getElementById("calEvtDate").value = "";
-    document.getElementById("calEvtCategory").value = "muu";
-    if (courseSel) { courseSel.value = ""; courseSel.style.display = "none"; }
   });
-
-  // Populate course select
-  calRefreshCourseSelect();
 }
 
 // Initialize when tab becomes active
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
-    if (btn.dataset.tab === "kalenteri") {
-      calRefreshCourseSelect();
-      calRender();
-    }
+    if (btn.dataset.tab === "kalenteri") calRender();
   });
 });
 
-// Run once to set initial state (for first paint if tab is opened directly)
-(function calInit() {
-  calRefreshCourseSelect();
-  calBindEvents();
-})();
+// Bind button events immediately (safe — only adds listeners, doesn't read state)
+calBindEvents();

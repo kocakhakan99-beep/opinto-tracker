@@ -4,6 +4,23 @@
 function bindEvents() {
 
   // — PDF Print —
+  // Snapshot the whiteboard canvas to an <img> before printing so it appears in print output
+  window.addEventListener("beforeprint", () => {
+    const isPiirto = document.getElementById("tab-piirtotaulu")?.classList.contains("active");
+    if (!isPiirto) return;
+    const c = document.getElementById("ptDrawCanvas");
+    const wrap = document.getElementById("ptCanvas");
+    if (!c || !wrap) return;
+    const img = document.createElement("img");
+    img.id = "ptPrintImg";
+    img.src = c.toDataURL("image/png");
+    img.style.cssText = "position:absolute;top:0;left:0;width:100%;height:auto;z-index:200;pointer-events:none";
+    wrap.appendChild(img);
+  });
+  window.addEventListener("afterprint", () => {
+    document.getElementById("ptPrintImg")?.remove();
+  });
+
   $("#btnPrintPdf")?.addEventListener("click", () => window.print());
 
   // — Lukujaksot collapse toggle —
@@ -333,7 +350,6 @@ function bindEvents() {
       }
       if (btn.dataset.tab === "kalenteri") {
         calRender();
-        calRefreshCourseSelect();
       }
     });
   });
