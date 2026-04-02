@@ -1,3 +1,7 @@
+// ── Collapse state ──
+const collapsedPeriods = new Set();
+const collapsedCourses = new Set();
+
 // RENDERING — STATS
 // ═══════════════════════════════════════
 
@@ -79,15 +83,27 @@ function renderPeriods() {
       </div>
     `;
     root.appendChild(el);
+
+    // Restore collapse state for period
+    if (collapsedPeriods.has(period.id)) {
+      const body = el.querySelector("[data-period-body]");
+      if (body) body.style.display = "none";
+      el.querySelector(".period-hd .chevron")?.classList.remove("open");
+    }
   }
 
-  // apply incomplete styles
+  // apply incomplete styles and restore course collapse state
   for (const card of root.querySelectorAll(".course-card")) {
     const pId = card.closest("[data-period-id]")?.dataset.periodId;
     const cId = card.dataset.courseId;
     const p = state.periods.find(x => x.id === pId);
     const c = p?.courses.find(x => x.id === cId);
     if (c) updateCourseStyles(card, c);
+    if (collapsedCourses.has(cId)) {
+      const body = card.querySelector("[data-course-body]");
+      if (body) body.style.display = "none";
+      card.querySelector(".course-hd .chevron")?.classList.remove("open");
+    }
   }
 }
 
@@ -108,7 +124,7 @@ function courseCardHtml(c) {
   const completion = courseCompletion(c);
   const gradeDisplay = courseGradeDisplay(c);
   const display = !!c.display;
-  const status = c.status || "tuleva";
+  const status = deriveCourseStatus(c);
   const modules = c.modules || [];
   const wSum = moduleWeightSum(modules);
   const wOk  = modules.length === 0 || Math.abs(wSum - 100) < 0.01;
@@ -125,6 +141,7 @@ function courseCardHtml(c) {
         </button>
         <input class="input" data-field="name" placeholder="Kurssin nimi" value="${escapeHtml(c.name)}" style="flex:1;min-width:120px" />
         ${courseStatusBadge(status)}
+        <div class="course-prog-bar" title="${completion}% suoritettu"><div class="course-prog-fill" style="width:${completion}%"></div></div>
         <span class="pill" style="flex-shrink:0">${completion}%</span>
         <span class="pill" style="flex-shrink:0">${gradeDisplay}</span>
         <button class="btn btn-danger btn-icon" data-action="delete-course" style="flex-shrink:0">${ICONS.trash}</button>
@@ -133,11 +150,6 @@ function courseCardHtml(c) {
         <div class="c-grid" style="margin-top:9px">
           <div style="display:flex;gap:7px;align-items:center;min-width:0">
             <button class="btn btn-ghost btn-icon" data-action="focus-course-name">${ICONS.pencil}</button>
-            <select class="input" data-field="status" style="max-width:130px">
-              <option value="tuleva"     ${status==="tuleva"     ? "selected":""}>Tuleva</option>
-              <option value="kaynnissa"  ${status==="kaynnissa"  ? "selected":""}>Käynnissä</option>
-              <option value="suoritettu" ${status==="suoritettu" ? "selected":""}>Suoritettu</option>
-            </select>
           </div>
           <div><input class="input" data-field="credits" type="number" step="0.5" min="0" placeholder="0" value="${credits}" /></div>
           <div><input class="input grade-ro" data-field="completion" type="text" readonly value="${completion}%" title="Laskettu moduuleista" /></div>
@@ -247,7 +259,7 @@ function rerenderCourseCard(periodId, courseId) {
   tmp.innerHTML = courseCardHtml(c);
   const newCard = tmp.firstElementChild;
   existing.replaceWith(newCard);
-  if (!wasCourseOpen) {
+  if (!wasCourseOpen || collapsedCourses.has(courseId)) {
     const body = newCard.querySelector("[data-course-body]");
     if (body) body.style.display = "none";
     newCard.querySelector(".course-hd .chevron")?.classList.remove("open");

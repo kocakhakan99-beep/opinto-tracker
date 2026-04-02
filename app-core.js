@@ -173,6 +173,15 @@ function courseGradeDisplay(course) {
   return `${rounded} (${String(raw).replace(".", ",")})`;
 }
 
+function deriveCourseStatus(course) {
+  const completion = courseCompletion(course);
+  if (completion >= 100) return "suoritettu";
+  const modules = course.modules || [];
+  if (modules.length === 0) return "tuleva";
+  const anyGraded = modules.some(m => moduleIsGraded(m));
+  return anyGraded ? "kaynnissa" : "tuleva";
+}
+
 function requiredGradeForModule(course, moduleId) {
   const target = asNumber(course.target);
   if (target === null) return null;
