@@ -45,7 +45,18 @@ function defaultState() {
         }]
       }
     ],
-    deadlines: []
+    deadlines: [],
+    calendarEvents: []
+  };
+}
+
+function normalizeCalendarEvent(e) {
+  return {
+    id: e.id || uid(),
+    title: (e.title ?? "").toString(),
+    category: ["kurssi", "muu", "personal"].includes(e.category) ? e.category : "muu",
+    courseId: (e.courseId ?? "").toString(),
+    date: (e.date ?? "").toString()
   };
 }
 
@@ -79,7 +90,8 @@ function normalizeState(s) {
     onlyCompleted: !!(s.onlyCompleted),
     colorScheme: typeof s.colorScheme === "string" ? s.colorScheme : "default",
     periods: [],
-    deadlines: Array.isArray(s.deadlines) ? s.deadlines.map(normalizeDeadline) : []
+    deadlines: Array.isArray(s.deadlines) ? s.deadlines.map(normalizeDeadline) : [],
+    calendarEvents: Array.isArray(s.calendarEvents) ? s.calendarEvents.map(normalizeCalendarEvent) : []
   };
   for (const p of (s.periods || [])) {
     out.periods.push({
@@ -257,7 +269,8 @@ const ICONS = {
   chevron:  `<svg class="iconSvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`,
   calendar: `<svg class="iconSvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>`,
   book:     `<svg class="iconSvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
-  edit2:    `<svg class="iconSvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M12 8v8"/></svg>`
+  edit2:    `<svg class="iconSvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M12 8v8"/></svg>`,
+  print:    `<svg class="iconSvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>`
 };
 
 function mountIcons() {
@@ -267,8 +280,10 @@ function mountIcons() {
   $("#icoLayers").innerHTML  = ICONS.layers;
   $("#icoDownload").innerHTML = ICONS.download;
   $("#icoUpload").innerHTML  = ICONS.upload;
+  $("#icoPrint").innerHTML   = ICONS.print;
   $("#icoTabOpinnot").innerHTML = ICONS.book;
   $("#icoTabDl").innerHTML   = ICONS.calendar;
+  $("#icoTabKalenteri").innerHTML = ICONS.calendar;
   $("#icoTabPiirto").innerHTML = ICONS.edit2;
   $("#icoDeadline").innerHTML = ICONS.calendar;
 }

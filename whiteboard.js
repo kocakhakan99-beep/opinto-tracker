@@ -26,7 +26,8 @@ function ptDefaultState() {
 function ptNormNote(n) {
   return { id:n.id||uid(), x:+(n.x)||40, y:+(n.y)||40,
            w:Math.max(160,+(n.w)||220), h:Math.max(100,+(n.h)||160),
-           color:n.color||"#fef08a", title:n.title||"", body:n.body||"" };
+           color:n.color||"#fef08a", title:n.title||"", body:n.body||"",
+           fontSize: n.fontSize || "13px" };
 }
 
 function ptNormImg(img) {
@@ -157,11 +158,13 @@ function ptSyncToolbar() {
 function ptRenderTabs() {
   const el=document.getElementById("ptPages"); if (!el) return;
   el.innerHTML=pt.pages.map(pg=>`
-    <button class="pt-page-tab${pg.id===pt.activePage?" active":""}" data-pt-page="${pg.id}">
-      <span class="pt-tab-name" data-pt-rename="${pg.id}" contenteditable="true" spellcheck="false"
-        style="outline:none;min-width:20px;cursor:text">${escapeHtml(pg.name)}</span>
-      <span class="pt-tab-del" data-pt-del-page="${pg.id}" title="Poista sivu">×</span>
-    </button>
+    <div class="pt-page-tab-wrap">
+      <button class="pt-page-tab${pg.id===pt.activePage?" active":""}" data-pt-page="${pg.id}">
+        <span class="pt-tab-name" data-pt-rename="${pg.id}" contenteditable="true" spellcheck="false"
+          style="outline:none;min-width:20px;cursor:text">${escapeHtml(pg.name)}</span>
+      </button>
+      <button class="pt-tab-del-btn${pg.id===pt.activePage?" visible":""}" data-pt-del-page="${pg.id}" title="Poista sivu">×</button>
+    </div>
   `).join("")+`<button class="pt-add-page" id="ptAddPage" title="Lisää sivu">＋</button>`;
 }
 
@@ -196,14 +199,15 @@ function ptMountNote(note, canvas) {
         <option value="8px">8</option>
         <option value="10px">10</option>
         <option value="12px">12</option>
-        <option value="14px" selected>14</option>
+        <option value="13px">13</option>
+        <option value="14px">14</option>
         <option value="16px">16</option>
         <option value="18px">18</option>
         <option value="20px">20</option>
         <option value="24px">24</option>
       </select>
     </div>
-    <div class="sn-body-rich" contenteditable="true" spellcheck="true" data-sn-body>${note.body||""}</div>
+    <div class="sn-body-rich" contenteditable="true" spellcheck="true" data-sn-body style="font-size:${note.fontSize||"13px"}">${note.body||""}</div>
     <div class="sn-resize" data-resize-handle title="Muuta kokoa">
       <svg viewBox="0 0 10 10"><path d="M2 8 L8 2M5 8 L8 5"/></svg>
     </div>`;
@@ -266,27 +270,34 @@ function ptBindNote(el, note) {
   });
 
   const sizeSelect = el.querySelector(".sn-fmt-size");
-  if(sizeSelect) sizeSelect.addEventListener("change", ()=>{
-    // Use a wrapper span with inline font-size (execCommand fontSize is unreliable)
-    const sel = window.getSelection();
-    if(sel && sel.rangeCount && !sel.isCollapsed) {
-      const range = sel.getRangeAt(0);
-      const span = document.createElement("span");
-      span.style.fontSize = sizeSelect.value;
-      try { range.surroundContents(span); } catch(e) {
-        // If surroundContents fails (crosses elements), use execCommand fallback
-        document.execCommand("styleWithCSS", false, true);
-        document.execCommand("fontSize", false, "7");
-        body.querySelectorAll("font[size='7']").forEach(f=>{
-          f.removeAttribute("size");
-          f.style.fontSize = sizeSelect.value;
-        });
+  if(sizeSelect) {
+    // Sync select to note's stored font size
+    sizeSelect.value = note.fontSize || "13px";
+    sizeSelect.addEventListener("change", ()=>{
+      const sz = sizeSelect.value;
+      note.fontSize = sz;
+      // Always update the body element's base font size
+      if(body) body.style.fontSize = sz;
+      // Also apply to any selected text
+      const sel = window.getSelection();
+      if(sel && sel.rangeCount && !sel.isCollapsed) {
+        const range = sel.getRangeAt(0);
+        const span = document.createElement("span");
+        span.style.fontSize = sz;
+        try { range.surroundContents(span); } catch(e) {
+          document.execCommand("styleWithCSS", false, true);
+          document.execCommand("fontSize", false, "7");
+          if(body) body.querySelectorAll("font[size='7']").forEach(f=>{
+            f.removeAttribute("size");
+            f.style.fontSize = sz;
+          });
+        }
+        sel.removeAllRanges();
       }
-      sel.removeAllRanges();
       note.body = body?.innerHTML || note.body;
       ptSave();
-    }
-  });
+    });
+  }
   const cb=el.querySelector("[data-color-btn]");
   cb.addEventListener("click",e=>{
     e.stopPropagation();
@@ -572,7 +583,7 @@ function ptAddNote() {
   ptSnapshot();
   const page=ptCurrentPage();
   const off=(page.notes.length%8)*20;
-  const note={id:uid(),x:40+off,y:40+off,w:220,h:160,color:"#fef08a",title:"",body:""};
+  const note={id:uid(),x:40+off,y:40+off,w:220,h:160,color:"#fef08a",title:"",body:"",fontSize:"13px"};
   page.notes.push(note); ptSave();
   const canvas=document.getElementById("ptCanvas"); if (canvas) ptMountNote(note,canvas);
   ptActiveTool="select"; ptSyncToolbar();

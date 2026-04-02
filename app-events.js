@@ -3,6 +3,19 @@
 
 function bindEvents() {
 
+  // — PDF Print —
+  $("#btnPrintPdf")?.addEventListener("click", () => window.print());
+
+  // — Lukujaksot collapse toggle —
+  $("#btnToggleOpinnot")?.addEventListener("click", () => {
+    const bd = $("#cardOpinnotBd");
+    const ch = $("#chevronOpinnot");
+    if (!bd) return;
+    const open = bd.style.display !== "none";
+    bd.style.display = open ? "none" : "";
+    ch?.classList.toggle("open", !open);
+  });
+
   // — Theme toggle —
   $("#btnTheme").addEventListener("click", () => {
     const next = state.theme === "dark" ? "light" : "dark";
@@ -187,11 +200,6 @@ function bindEvents() {
       saveState(); renderPeriods(); renderStats();
       return;
     }
-    if (action === "focus-course-name") {
-      const inp = courseEl?.querySelector("input[data-field='name']");
-      inp?.focus(); inp?.select();
-      return;
-    }
     if (action === "toggle-modules") {
       const body = courseEl?.querySelector("[data-mod-body]");
       if (!body) return;
@@ -322,6 +330,10 @@ function bindEvents() {
         const all = getAllCourses();
         sel.innerHTML = `<option value="">Muu</option>` +
           all.map(c => `<option value="${c.id}" ${c.id === cur ? "selected" : ""}>${escapeHtml(c.name || "(nimetön)")}</option>`).join("");
+      }
+      if (btn.dataset.tab === "kalenteri") {
+        if (typeof calRender === "function") calRender();
+        calRefreshCourseSelect();
       }
     });
   });
