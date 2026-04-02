@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="fi" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Opinto-tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-name">Opinto-tracker</span>
+      <span class="brand-tag">/ opiskelun seuranta</span>
+    </div>
+    <div class="topbar-r">
+      <button class="topbar-icon-btn" id="btnExport" title="Vie CSV"><span id="icoDownload"></span></button>
+      <button class="topbar-icon-btn" id="btnImport" title="Tuo CSV"><span id="icoUpload"></span></button>
+      <select id="colorScheme" class="input" style="max-width:140px;font-size:12px;padding:6px 9px" title="Väriteema">
+        <option value="default">Oletus</option>
+        <option value="pink">🌸 Pinkki</option>
+        <option value="baby-blue">🩵 Vaaleansininen</option>
+        <option value="olive">🌿 Oliivinvihreä</option>
+        <option value="brown">🤎 Vaaleanruskea</option>
+        <option value="pastel">💛 Pastellinkeltainen</option>
+      </select>
+      <button class="theme-btn" id="btnTheme" title="Vaihda teema">
+        <svg id="icoMoon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg id="icoSun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <nav class="tabs-bar">
+    <button class="tab-btn active" data-tab="opinnot"><span id="icoTabOpinnot"></span>Opinnot</button>
+    <button class="tab-btn" data-tab="deadlinet"><span id="icoTabDl"></span>Deadlinet</button>
+    <button class="tab-btn" data-tab="piirtotaulu"><span id="icoTabPiirto"></span>Muistivihko</button>
+  </nav>
+
+  <!-- OPINNOT -->
+  <div class="tab-panel active" id="tab-opinnot">
+    <section class="stats" id="stats"></section>
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-hd-l">
+          <span id="icoLayers"></span>
+          Lukujaksot &amp; kurssit
+          <span class="mini" style="font-weight:400">— painot summattava 100%</span>
+        </div>
+        <div class="flex">
+          <span class="pill"><span class="kbd">Ctrl S</span> tallentaa</span>
+          <button class="btn btn-primary" id="btnAddPeriod"><span id="icoPlus"></span>Lisää lukujakso</button>
+        </div>
+      </div>
+      <div class="card-bd">
+        <div class="periods-list" id="periods"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEADLINET -->
+  <div class="tab-panel" id="tab-deadlinet">
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-hd-l"><span id="icoDeadline"></span>Deadlinet &amp; tapahtumat</div>
+      </div>
+      <div class="card-bd">
+        <div class="dl-list" id="deadlineList"></div>
+        <div class="dl-add" style="margin-top:14px">
+          <input class="input" id="dlName" placeholder="Nimi tai kuvaus" />
+          <input class="input" id="dlDate" type="date" style="max-width:160px" />
+          <select class="input" id="dlType" style="max-width:140px">
+            <option value="tehtava">Tehtävä</option>
+            <option value="ryhmatyo">Ryhmätyö</option>
+            <option value="koe">Koe</option>
+          </select>
+          <select class="input" id="dlCourse" style="max-width:180px">
+            <option value="">Muu</option>
+          </select>
+          <button class="btn btn-primary" id="btnAddDeadline"><span id="icoPlus2"></span>Lisää</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PIIRTOTAULU -->
+  <div class="tab-panel" id="tab-piirtotaulu">
+    <div class="pt-shell" id="ptShell">
+
+      <!-- Toolbar -->
+      <div class="pt-toolbar" id="ptToolbar">
+
+        <!-- Draw tools -->
+        <button class="pt-tool-btn active" id="ptToolSelect" data-tool="select" title="Valitse / siirrä">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-7 1-4 7z"/></svg>
+          Valitse
+        </button>
+        <button class="pt-tool-btn" id="ptToolPen" data-tool="pen" title="Kynä">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          Kynä
+        </button>
+        <button class="pt-tool-btn" id="ptToolEraser" data-tool="eraser" title="Pyyhekumi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4-4 11-11 4 4Z"/><path d="M14 7l3 3"/><path d="M3 21h18"/></svg>
+          Pyyhekumi
+        </button>
+
+        <div class="pt-sep"></div>
+
+        <!-- Pen color -->
+        <label style="font-size:11.5px;color:var(--text2);font-weight:500;display:flex;align-items:center;gap:5px;cursor:pointer" title="Piirtokynän väri">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+          <input type="color" id="ptPenColor" value="#e040fb" style="width:28px;height:22px;border:none;border-radius:6px;cursor:pointer;padding:1px;background:transparent" title="Väri" />
+        </label>
+
+        <!-- Stroke size -->
+        <label style="font-size:11.5px;color:var(--text2);font-weight:500;display:flex;align-items:center;gap:5px" title="Viivan paksuus">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/></svg>
+          <input type="range" id="ptPenSize" min="1" max="32" value="4" style="width:70px;accent-color:var(--accent)" title="Paksuus" />
+          <span id="ptPenSizeLabel" style="min-width:18px;font-family:var(--font-mono);font-size:11px">4</span>
+        </label>
+
+        <div class="pt-sep"></div>
+
+        <!-- Sticky note -->
+        <button class="pt-tool-btn" id="ptBtnAddNote" title="Lisää muistilappu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/></svg>
+          Muistilappu
+        </button>
+
+        <!-- Add image -->
+        <button class="pt-tool-btn" id="ptBtnAddImg" title="Lisää kuva tiedostosta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+          Kuva
+        </button>
+
+        <!-- Undo / Redo -->
+        <button class="pt-tool-btn" id="ptBtnUndo" title="Kumoa (Ctrl+Z)" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M3 13A9 9 0 1 0 5.7 5.7L3 7"/></svg>
+          Kumoa
+        </button>
+        <button class="pt-tool-btn" id="ptBtnRedo" title="Tee uudelleen (Ctrl+Y)" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M21 13A9 9 0 1 1 18.3 5.7L21 7"/></svg>
+          Tee uudelleen
+        </button>
+
+        <!-- Clear drawing -->
+        <button class="pt-tool-btn" id="ptBtnClearDraw" title="Tyhjennä koko sivu (piirros + muistilaput + kuvat)" style="color:var(--danger)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+          Tyhjennä
+        </button>
+
+        <div class="pt-sep"></div>
+
+        <!-- Grid -->
+        <span style="font-size:11.5px;color:var(--text2);font-weight:500">Ruudukko:</span>
+        <button class="pt-tool-btn active" id="ptGridDot" data-grid="dot">Pisteet</button>
+        <button class="pt-tool-btn" id="ptGridLine" data-grid="line">Viivat</button>
+        <button class="pt-tool-btn" id="ptGridNone" data-grid="none">Ei</button>
+
+        <div class="pt-sep"></div>
+        <span style="font-size:11.5px;color:var(--text2);font-weight:500;margin-left:2px">Sivut:</span>
+      </div>
+
+      <!-- Page tabs -->
+      <div class="pt-pages" id="ptPages"></div>
+
+      <!-- Image file input (hidden) -->
+      <input type="file" id="ptImgInput" accept="image/*" style="display:none" />
+
+      <!-- Canvas -->
+      <div class="pt-canvas-wrap pt-grid-dot" id="ptCanvas">
+        <!-- Drawing canvas layer (behind notes) -->
+        <canvas id="ptDrawCanvas"></canvas>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<input type="file" id="fileInput" accept=".csv,text/csv" style="display:none" />
+<div class="toast" id="toast"><span id="icoCheck"></span><span id="toastText">Tallennettu</span></div>
+
+<script src="app-core.js"></script>
+<script src="studies.js"></script>
+<script src="deadlines.js"></script>
+<script src="app-events.js"></script>
+<script src="whiteboard.js"></script>
+<script src="app-init.js"></script>
+</body>
+</html>
