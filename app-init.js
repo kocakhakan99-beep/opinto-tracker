@@ -25,6 +25,7 @@ const BETA_KEYS = [
   const gate = document.getElementById("betaGate");
   if (!gate) return;
 
+  // Already unlocked — inline script already hid the gate; just remove the node.
   if (localStorage.getItem("betaUnlocked") === "1") {
     gate.remove();
     return;
@@ -34,12 +35,21 @@ const BETA_KEYS = [
   const btn   = document.getElementById("betaKeySubmit");
   const err   = document.getElementById("betaKeyErr");
 
+  function reveal() {
+    // 1. Show the app underneath while panels still cover it
+    document.body.classList.remove("beta-locked");
+    // 2. Trigger panel slide-away animation
+    gate.classList.add("revealing");
+    // 3. Remove gate node after animation finishes (0.65s transition)
+    setTimeout(() => gate.remove(), 700);
+  }
+
   function tryUnlock() {
     const val = input.value.trim().toUpperCase();
     if (BETA_KEYS.includes(val)) {
       localStorage.setItem("betaUnlocked", "1");
-      gate.classList.add("unlocked");
-      setTimeout(() => gate.remove(), 520);
+      // Fade form out first (0.25s), then reveal
+      setTimeout(reveal, 280);
     } else {
       err.textContent = "virheellinen koodi";
       input.select();

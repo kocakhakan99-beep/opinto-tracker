@@ -8,11 +8,14 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body class="beta-locked">
+<script>if(localStorage.getItem('betaUnlocked')==='1'){document.body.classList.remove('beta-locked');document.body.classList.add('beta-skip');}</script>
 
 <!-- BETA GATE -->
 <div class="beta-gate" id="betaGate">
-  <div class="beta-gate-inner">
+  <div class="beta-panel beta-panel-top"></div>
+  <div class="beta-panel beta-panel-bottom"></div>
+  <div class="beta-gate-inner" id="betaGateInner">
     <div class="beta-gate-glow"></div>
     <p class="beta-gate-title">opinto-tracker</p>
     <p class="beta-gate-sub">suljettu beta</p>

@@ -1,31 +1,55 @@
 /* ═══ BETA GATE ═══ */
-    --font-digital: 'Share Tech Mono', monospace;
+
+/* Hide app content until unlocked — truly nothing visible */
+body.beta-locked .app { visibility: hidden; pointer-events: none; }
+
+/* Already-unlocked: hide gate immediately before it ever paints */
+body.beta-skip .beta-gate { display: none; }
 
 .beta-gate {
   position: fixed;
   inset: 0;
   z-index: 9999;
+  pointer-events: all;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+/* Two black panels covering the full screen */
+.beta-panel {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
   background: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-digital, 'Share Tech Mono', monospace);
-  transition: opacity .5s ease, visibility .5s ease;
+  z-index: 1;
+  transition: transform .65s cubic-bezier(.77,0,.175,1);
 }
-.beta-gate.unlocked {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
+.beta-panel-top    { top: 0; }
+.beta-panel-bottom { bottom: 0; }
+
+/* Slide panels away on reveal */
+.beta-gate.revealing .beta-panel-top    { transform: translateY(-100%); }
+.beta-gate.revealing .beta-panel-bottom { transform: translateY(100%); }
+
+/* Centre form, above the panels */
 .beta-gate-inner {
-  position: relative;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   padding: 0 20px;
   text-align: center;
+  transition: opacity .25s ease;
 }
+.beta-gate.revealing .beta-gate-inner {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .beta-gate-glow {
   position: absolute;
   top: 50%;
@@ -39,7 +63,7 @@
   filter: blur(24px);
 }
 .beta-gate-title {
-  font-family: var(--font-digital, 'Share Tech Mono', monospace);
+  font-family: 'Share Tech Mono', monospace;
   font-size: clamp(2rem, 6vw, 3.6rem);
   letter-spacing: .18em;
   color: #c8bcff;
@@ -50,7 +74,7 @@
   text-transform: lowercase;
 }
 .beta-gate-sub {
-  font-family: var(--font-digital, 'Share Tech Mono', monospace);
+  font-family: 'Share Tech Mono', monospace;
   font-size: clamp(.85rem, 2.5vw, 1.05rem);
   letter-spacing: .35em;
   color: rgba(120,100,220,.7);
@@ -60,7 +84,6 @@
 .beta-gate-form {
   display: flex;
   align-items: center;
-  gap: 0;
   background: rgba(255,255,255,.03);
   border: 1px solid rgba(109,84,245,.35);
   border-radius: 8px;
@@ -74,7 +97,7 @@
   border: none;
   outline: none;
   padding: 14px 18px;
-  font-family: var(--font-digital, 'Share Tech Mono', monospace);
+  font-family: 'Share Tech Mono', monospace;
   font-size: 1.05rem;
   letter-spacing: .12em;
   color: #d4ccff;
@@ -91,10 +114,9 @@
   color: #a090ff;
   font-size: 1.3rem;
   padding: 0 20px;
-  height: 100%;
   cursor: pointer;
   transition: background .15s;
-  font-family: var(--font-digital, 'Share Tech Mono', monospace);
+  font-family: 'Share Tech Mono', monospace;
   min-height: 50px;
 }
 .beta-gate-btn:hover {
@@ -102,14 +124,14 @@
   color: #c8bcff;
 }
 .beta-gate-err {
-  font-family: var(--font-digital, 'Share Tech Mono', monospace);
+  font-family: 'Share Tech Mono', monospace;
   font-size: .8rem;
   letter-spacing: .15em;
   color: rgba(240,80,112,.75);
   min-height: 1.2em;
   text-shadow: 0 0 8px rgba(240,80,112,.5);
-  transition: opacity .2s;
 }
+
 
 /* ═══ TOKENS ═══ */
     :root {
