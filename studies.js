@@ -69,13 +69,10 @@ function renderPeriods() {
         <span class="pill" data-pill="avg">KA: ${m.avg === null ? "—" : m.avg}</span>
         <div class="period-actions">
           <button class="btn" data-action="add-course" title="Lisää kurssi listasta tai omana">${ICONS.plus} Kurssi</button>
-          <button class="btn btn-danger btn-icon" data-action="delete-period">${ICONS.trash}</button>
+          <button class="btn btn-danger btn-icon" data-action="delete-period" title="Poista lukujakso">${ICONS.trash}</button>
         </div>
       </div>
       <div class="period-bd" data-period-body>
-        <div class="c-grid head">
-          <div>Kurssi</div><div>Op</div><div>Suor%</div><div>Näyttö</div><div>Arvosana</div><div></div>
-        </div>
         <div class="course-list">
           ${period.courses.map(courseCardHtml).join("")}
         </div>
@@ -144,28 +141,33 @@ function courseCardHtml(c) {
         <div class="course-prog-bar" title="${completion}% suoritettu"><div class="course-prog-fill" style="width:${completion}%"></div></div>
         <span class="pill" style="flex-shrink:0">${completion}%</span>
         <span class="pill" style="flex-shrink:0">${gradeDisplay}</span>
-        <button class="btn btn-danger btn-icon" data-action="delete-course" style="flex-shrink:0">${ICONS.trash}</button>
+        <button class="btn btn-danger btn-icon" data-action="delete-course" style="flex-shrink:0" title="Poista kurssi">${ICONS.trash}</button>
       </div>
       <div class="course-body" data-course-body>
-        <div class="c-grid" style="margin-top:9px">
-          <div style="display:flex;gap:7px;align-items:center;min-width:0">
-            <button class="btn btn-ghost btn-icon" data-action="focus-course-name">${ICONS.pencil}</button>
-          </div>
-          <div><input class="input" data-field="credits" type="number" step="0.5" min="0" placeholder="0" value="${credits}" /></div>
-          <div><input class="input grade-ro" data-field="completion" type="text" readonly value="${completion}%" title="Laskettu moduuleista" /></div>
-          <div>
+        <div class="course-fields">
+          <label class="cf-field">
+            <span class="cf-label">Opintopisteet</span>
+            <input class="input" data-field="credits" type="number" step="0.5" min="0" placeholder="0" value="${credits}" />
+          </label>
+          <label class="cf-field">
+            <span class="cf-label">Suoritus %</span>
+            <input class="input grade-ro" data-field="completion" type="text" readonly value="${completion}%" title="Laskettu moduuleista" />
+          </label>
+          <label class="cf-field">
+            <span class="cf-label">Näyttö listalla</span>
             <select class="input" data-field="display">
               <option value="false" ${display ? "" : "selected"}>Ei</option>
               <option value="true"  ${display ? "selected" : ""}>Kyllä</option>
             </select>
-          </div>
-          <div>
+          </label>
+          <label class="cf-field">
+            <span class="cf-label">Arvosana</span>
             <input class="input grade-ro" data-field="grade" type="text" readonly value="${gradeDisplay}" title="Laskettu moduuleista" />
-            <div class="mini" style="margin-top:4px">Tavoite: ${target === "" ? "—" : target}</div>
-          </div>
-          <div style="display:flex;justify-content:flex-end;gap:7px;align-items:center">
-            <input class="input" style="max-width:100px" data-field="target" type="number" step="0.1" min="0" max="5" placeholder="Tavoite" value="${target}" />
-          </div>
+          </label>
+          <label class="cf-field">
+            <span class="cf-label">Tavoite</span>
+            <input class="input" data-field="target" type="number" step="0.1" min="0" max="5" placeholder="—" value="${target}" />
+          </label>
         </div>
         <div class="mod-wrap">
           <button class="btn btn-ghost mod-toggle" data-action="toggle-modules">

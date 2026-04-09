@@ -3,6 +3,36 @@
 
 function bindEvents() {
 
+  // — PDF Print —
+  // Snapshot the whiteboard canvas to an <img> before printing so it appears in print output
+  window.addEventListener("beforeprint", () => {
+    const isPiirto = document.getElementById("tab-piirtotaulu")?.classList.contains("active");
+    if (!isPiirto) return;
+    const c = document.getElementById("ptDrawCanvas");
+    const wrap = document.getElementById("ptCanvas");
+    if (!c || !wrap) return;
+    const img = document.createElement("img");
+    img.id = "ptPrintImg";
+    img.src = c.toDataURL("image/png");
+    img.style.cssText = "position:absolute;top:0;left:0;width:100%;height:auto;z-index:200;pointer-events:none";
+    wrap.appendChild(img);
+  });
+  window.addEventListener("afterprint", () => {
+    document.getElementById("ptPrintImg")?.remove();
+  });
+
+  $("#btnPrintPdf")?.addEventListener("click", () => window.print());
+
+  // — Lukujaksot collapse toggle —
+  $("#btnToggleOpinnot")?.addEventListener("click", () => {
+    const bd = $("#cardOpinnotBd");
+    const ch = $("#chevronOpinnot");
+    if (!bd) return;
+    const open = bd.style.display !== "none";
+    bd.style.display = open ? "none" : "";
+    ch?.classList.toggle("open", !open);
+  });
+
   // — Theme toggle —
   $("#btnTheme").addEventListener("click", () => {
     const next = state.theme === "dark" ? "light" : "dark";
@@ -187,11 +217,6 @@ function bindEvents() {
       saveState(); renderPeriods(); renderStats();
       return;
     }
-    if (action === "focus-course-name") {
-      const inp = courseEl?.querySelector("input[data-field='name']");
-      inp?.focus(); inp?.select();
-      return;
-    }
     if (action === "toggle-modules") {
       const body = courseEl?.querySelector("[data-mod-body]");
       if (!body) return;
@@ -322,6 +347,9 @@ function bindEvents() {
         const all = getAllCourses();
         sel.innerHTML = `<option value="">Muu</option>` +
           all.map(c => `<option value="${c.id}" ${c.id === cur ? "selected" : ""}>${escapeHtml(c.name || "(nimetön)")}</option>`).join("");
+      }
+      if (btn.dataset.tab === "kalenteri") {
+        calRender();
       }
     });
   });
