@@ -1,3 +1,116 @@
+/* ═══ BETA GATE ═══ */
+    --font-digital: 'Share Tech Mono', monospace;
+
+.beta-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-digital, 'Share Tech Mono', monospace);
+  transition: opacity .5s ease, visibility .5s ease;
+}
+.beta-gate.unlocked {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.beta-gate-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px;
+  text-align: center;
+}
+.beta-gate-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 420px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(109,84,245,.18) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(24px);
+}
+.beta-gate-title {
+  font-family: var(--font-digital, 'Share Tech Mono', monospace);
+  font-size: clamp(2rem, 6vw, 3.6rem);
+  letter-spacing: .18em;
+  color: #c8bcff;
+  text-shadow:
+    0 0 12px rgba(109,84,245,.8),
+    0 0 28px rgba(109,84,245,.4);
+  line-height: 1.1;
+  text-transform: lowercase;
+}
+.beta-gate-sub {
+  font-family: var(--font-digital, 'Share Tech Mono', monospace);
+  font-size: clamp(.85rem, 2.5vw, 1.05rem);
+  letter-spacing: .35em;
+  color: rgba(120,100,220,.7);
+  text-transform: lowercase;
+  margin-bottom: 22px;
+}
+.beta-gate-form {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(109,84,245,.35);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 18px rgba(109,84,245,.2);
+  width: min(420px, 90vw);
+}
+.beta-gate-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 14px 18px;
+  font-family: var(--font-digital, 'Share Tech Mono', monospace);
+  font-size: 1.05rem;
+  letter-spacing: .12em;
+  color: #d4ccff;
+  caret-color: #8b74ff;
+}
+.beta-gate-input::placeholder {
+  color: rgba(140,120,200,.4);
+  letter-spacing: .1em;
+}
+.beta-gate-btn {
+  background: rgba(109,84,245,.15);
+  border: none;
+  border-left: 1px solid rgba(109,84,245,.35);
+  color: #a090ff;
+  font-size: 1.3rem;
+  padding: 0 20px;
+  height: 100%;
+  cursor: pointer;
+  transition: background .15s;
+  font-family: var(--font-digital, 'Share Tech Mono', monospace);
+  min-height: 50px;
+}
+.beta-gate-btn:hover {
+  background: rgba(109,84,245,.3);
+  color: #c8bcff;
+}
+.beta-gate-err {
+  font-family: var(--font-digital, 'Share Tech Mono', monospace);
+  font-size: .8rem;
+  letter-spacing: .15em;
+  color: rgba(240,80,112,.75);
+  min-height: 1.2em;
+  text-shadow: 0 0 8px rgba(240,80,112,.5);
+  transition: opacity .2s;
+}
+
 /* ═══ TOKENS ═══ */
     :root {
       --radius: 16px;
